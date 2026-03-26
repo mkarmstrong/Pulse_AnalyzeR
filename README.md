@@ -3,6 +3,14 @@
 Example of applying pwa_plus.R using a for loop
 
 ```R
+# load required functions from this repo
+devtools::source_url("https://raw.githubusercontent.com/mkarmstrong/quick_R_plots/main/Splot.R")
+devtools::source_url("https://raw.githubusercontent.com/mkarmstrong/quick_R_plots/main/Bplot.R")
+devtools::source_url("https://raw.githubusercontent.com/mkarmstrong/quick_R_plots/main/BAplot.R")
+devtools::source_url("https://raw.githubusercontent.com/mkarmstrong/quick_R_plots/main/BAplot.R")
+devtools::source_url("https://raw.githubusercontent.com/mkarmstrong/quick_R_plots/main/BAplot.R")
+
+
 # apply to multiple waveforms stored row wise in one .csv
 
 # Load data

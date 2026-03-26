@@ -4,12 +4,11 @@ Example of applying pwa_plus.R using a for loop
 
 ```R
 # load required functions from this repo
-devtools::source_url("https://raw.githubusercontent.com/mkarmstrong/quick_R_plots/main/Splot.R")
-devtools::source_url("https://raw.githubusercontent.com/mkarmstrong/quick_R_plots/main/Bplot.R")
-devtools::source_url("https://raw.githubusercontent.com/mkarmstrong/quick_R_plots/main/BAplot.R")
-devtools::source_url("https://raw.githubusercontent.com/mkarmstrong/quick_R_plots/main/BAplot.R")
-devtools::source_url("https://raw.githubusercontent.com/mkarmstrong/quick_R_plots/main/BAplot.R")
-
+devtools::source_url("https://raw.githubusercontent.com/mkarmstrong/Pulse_AnalyzeR/refs/heads/main/fsg721.R")
+devtools::source_url("https://raw.githubusercontent.com/mkarmstrong/Pulse_AnalyzeR/refs/heads/main/low_pass_filt.R")
+devtools::source_url("https://raw.githubusercontent.com/mkarmstrong/Pulse_AnalyzeR/refs/heads/main/weighted_dicrotic.R")
+devtools::source_url("https://raw.githubusercontent.com/mkarmstrong/Pulse_AnalyzeR/refs/heads/main/beta_dist.R")
+devtools::source_url("https://raw.githubusercontent.com/mkarmstrong/Pulse_AnalyzeR/refs/heads/main/root_spline.R")
 
 # apply to multiple waveforms stored row wise in one .csv
 
@@ -38,5 +37,5 @@ for(i in 1:nrow(pwdata)) {
 colnames(pw_indices) <- colnames(results)
 
 # save data
-write.csv(pw_indices, "R:/Data/KIDS/SCor Data/Katy_project/clean/pw_metrics.csv", row.names = F)
+write.csv(pw_indices, "C:/User/data/pulse_wave_indices.csv", row.names = F)
 ```

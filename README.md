@@ -1,6 +1,6 @@
 # Pulse_AnalyzeR
 
-Example of applying pwa_plus.R using a for loop
+Example: apply the pulse wave analyzer using a for loop
 
 ```R
 # install.packages("devtools") # if devtools not instaled, run once.

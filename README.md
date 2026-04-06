@@ -3,39 +3,32 @@
 Example of applying pwa_plus.R using a for loop
 
 ```R
+# install.packages("devtools") # if devtools not instaled, run once.
+
 # load required functions from this repo
-devtools::source_url("https://raw.githubusercontent.com/mkarmstrong/Pulse_AnalyzeR/refs/heads/main/fsg721.R")
-devtools::source_url("https://raw.githubusercontent.com/mkarmstrong/Pulse_AnalyzeR/refs/heads/main/low_pass_filt.R")
-devtools::source_url("https://raw.githubusercontent.com/mkarmstrong/Pulse_AnalyzeR/refs/heads/main/weighted_dicrotic.R")
-devtools::source_url("https://raw.githubusercontent.com/mkarmstrong/Pulse_AnalyzeR/refs/heads/main/beta_dist.R")
-devtools::source_url("https://raw.githubusercontent.com/mkarmstrong/Pulse_AnalyzeR/refs/heads/main/root_spline.R")
+devtools::source_url("https://raw.githubusercontent.com/mkarmstrong/Pulse_AnalyzeR/refs/heads/main/pwa_functions.R")
 
 # apply to multiple waveforms stored row wise in one .csv
 
-# Load data
-pwdata <- read.csv("C:/User/data/pulse_waves.csv")
+# Load data (.csv) assumes ID variable is in first column with remaining columns containing the waveform
+pwdata <- read.csv("R:/Data/KIDS/SCor Data/Katy_project/clean/pwaves_output.csv")
 
-# Create an empty data set to fill
-pw_indices <- data.frame(matrix(data = NA, nrow = nrow(pwdata), ncol = 43))
+# Initialize data frame to fill
+pw_indices <- data.frame(matrix(data = NA, nrow = nrow(pwdata), ncol = 44))
 
-# calculates the pw indcies and save them to pw_indices
+# Calculate pulse wave indices and save them to pw_indices via a for loop
 for(i in 1:nrow(pwdata)) {
-  # Extract ID
-  id <- data.frame(ptid = pwdata[i, 1])
-  print(unname(id))
-  # Extract the waveform
-  sig <- as.vector(na.omit(t(pwdata[i, -1])))
-  # Calculate indices
-  indices1 <- pwa_plus(sig, fs = 128, filt = T, norm = T)
-  # Combined data
-  results <- cbind(id, indices1)
-  # Save into dataframe
-  pw_indices[i, ] <- results[1,]
+  id <- data.frame(ptid = pwdata[i, 1])                   # Extract ID
+  print(unname(id))                                       # Print id to keep track
+  sig <- as.vector(na.omit(t(pwdata[i, -1])))             # Extract the waveform
+  indices1 <- pwa_plus(sig, fs = 128, filt = T, norm = T) # Calculate indices (change defaults to suit, i.e. fs = 200/1000 etc.)
+  results <- cbind(id, indices1)                          # Combined data
+  pw_indices[i, ] <- results[1,]                          # Save into dataframe
 }
 
-# col names
+# Get column names
 colnames(pw_indices) <- colnames(results)
 
-# save data
-write.csv(pw_indices, "C:/User/data/pulse_wave_indices.csv", row.names = F)
+# Save data
+write.csv(pw_indices, "R:/Data/KIDS/SCor Data/Katy_project/clean/pw_metrics.csv", row.names = F)
 ```

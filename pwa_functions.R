@@ -177,7 +177,10 @@ weighted_dicrotic <- function(pw, plot = FALSE) {
   
 }
 
-# Calculate beta distribution (used by weighted_dicrotic)
+
+
+
+# Calculate beta distribution (used by weighted_dicrotic) -----------------------------------------------------------------------------------------
 beta_dist <- function(x, alpha, beta = 5, plot = FALSE) {
   
   # start of distribution
@@ -233,7 +236,10 @@ root_spline <- function (x, y, y0 = 0, verbose = FALSE) {
   return(xr)
 }
 
-# Removes leading tail when pw is ensembled by gating to the ecg (per NIHem device)
+
+
+
+# Removes leading tail when pw is ensembled by gating to the ecg (per NIHem device) -----------------------------------------------------------------------------------------
 beat_fix_nihem <- function(x, plot = FALSE) {
   
   p <- x
@@ -589,7 +595,7 @@ pwa_plus <- function(pw, fs = 200, ecgGated = T, filt = FALSE, norm = TRUE, verb
   spec_cent <- sc(pw, pow_exp = 1.8)
 
   # calc pulse sharpness
-  pulse_sharp <- psi(pw, plot = F)
+  pulse_sharp <- psi(pw, fs = fs, plot = F)
   p_sharp <- pulse_sharp$psi
   
   # Find a

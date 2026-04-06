@@ -14,7 +14,7 @@ devtools::source_url("https://raw.githubusercontent.com/mkarmstrong/Pulse_Analyz
 pwdata <- read.csv("R:/Data/KIDS/SCor Data/Katy_project/clean/pwaves_output.csv")
 
 # Initialize data frame to fill
-pw_indices <- data.frame(matrix(data = NA, nrow = nrow(pwdata), ncol = 44))
+pw_indices <- data.frame(matrix(data = NA, nrow = nrow(pwdata), ncol = 43))
 
 # Run analysis and save to pw_indices via a for loop (you could convert to lapply if prefered)
 # Calculate pulse wave indices and save them to pw_indices via a for loop

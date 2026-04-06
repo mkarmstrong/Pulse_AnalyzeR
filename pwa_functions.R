@@ -68,7 +68,7 @@ low_pass_filt <- function(y, fq = 0.1, do.plot = FALSE) {
 
 
 # Find dicrotic notch -----------------------------------------------------------------------------------------
-weighted_dicrotic <- function(pw, plot = FALSE) {
+weighted_dicrotic <- function(pw, fs = 200, plot = FALSE) {
 
   # Get derivatives
   dp1 <- fsg721(pw)
@@ -81,7 +81,7 @@ weighted_dicrotic <- function(pw, plot = FALSE) {
   # Isolate notch area with 1st derivatives
   nni <- which.min(dp1)
   
-  # FIND DICROTIC DEPRESSION
+  # FIND DICROTIC DEPRESSION ------------------------------------------------
   
   # # End index without potential perturbation at end diastole
   # end2 <- end * .9
@@ -95,22 +95,34 @@ weighted_dicrotic <- function(pw, plot = FALSE) {
   # abline(v = dic, h = 0)
   
   # per: https://link.springer.com/article/10.1007/s10877-020-00473-3
-  hr_bps <- (60/(length(pw)/200))/60
+  # find dicrotic notch
+  HR_bps <- fs / length(pw)
   ft <- which.max(dp2[1:which.max(dp1)])
-  tsys <- round((-0.1*hr_bps+0.45)*200) + ft
-  data <- data.frame(a = numeric(31), err = numeric(31))
-  alpha <- 0
+  tsys <- round((-0.1 * HR_bps + 0.45) * fs) + ft
   
-  for(i in seq(1.5, 4.5, 0.1)) {
-    beta <- beta_dist(pw, i, 5)
-    alpha <- i
-    if(which.max(beta) >= tsys) {
-      break
+  # find alpha analytically
+  tPmax <- which.max(pw)
+  T_beat <- length(pw)
+  tau_wmax <- (tsys - tPmax) / (T_beat - tPmax)
+  tau_wmax <- max(0.01, min(0.99, tau_wmax))
+  alpha <- (5 * tau_wmax - 2 * tau_wmax + 1) / (1 - tau_wmax)
+  alpha <- max(1.5, min(4.5, alpha))
+  
+  beta_dis <- beta_dist(pw, alpha, 5)
+  
+  # check with standard weighting first
+  weighted_beta <- dp2 * beta_dis
+  peaks <- which(diff(sign(diff(weighted_beta))) == -2) + 1
+  peaks <- peaks[peaks > which.max(pw)]
+  
+  if (length(peaks) >= 2) {
+    top2 <- sort(weighted_beta[peaks], decreasing = TRUE)[1:2]
+    # if the two largest peaks are within 50% of each other, sharpen
+    if (top2[2] / top2[1] > 0.5) {
+      weighted_beta <- dp2 * beta_dis^2.5
     }
   }
   
-  beta_dis <- beta_dist(pw, alpha, 5)
-  weighted_beta <- dp2 * beta_dis
   dic <- which.max(weighted_beta)
   
   # plot(pw, type="l", lwd=2)
@@ -119,7 +131,8 @@ weighted_dicrotic <- function(pw, plot = FALSE) {
   # par(new=T)
   # plot(beta_dis, type="l", col=3)
   
-  # FIND DICROTIC PEAK
+  
+  # FIND DICROTIC PEAK ------------------------------------------------------
   
   end3 <- ((end - dic) * .6) + dic # 60% of diastolic duration
   
@@ -160,7 +173,7 @@ weighted_dicrotic <- function(pw, plot = FALSE) {
   # plot(dp1, type='o',col="grey")
   # abline(v = c(dic, dia), h = 0)
   
-  # PLOTS
+  # PLOTS -------------------------------------------------------------------
   
   if(isTRUE(plot)) {
     plot(pw, type = "l", lwd=2, ylab="BP (mmHg)")

@@ -527,6 +527,11 @@ psi <- function(pulse, nsample = 500, fs = 200, plot = F) {
 
 
 # The mother function, brings all the above together plus some additional -----------------------------------------------------------------------------------------
+# fs = sampling frequency
+# ecgGated = was the pulse wave averaged using ecg (TRUE/FALSE)
+# filt = apply low pass filter (TRUE/FALSE)
+# norm = zero normalize signal (TRUE/FALSE)
+# verbose = print results and plot (TRUE/FALSE) recomend set T for testing and F for batch analysis
 pwa_plus <- function(pw, fs = 200, ecgGated = T, filt = FALSE, norm = TRUE, verbose = FALSE) {
 
   # Low pass waveform

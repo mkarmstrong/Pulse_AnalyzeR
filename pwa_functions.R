@@ -551,7 +551,7 @@ psi <- function(pulse, nsample = 500, fs = 200, plot = F) {
 # filt = apply low pass filter (TRUE/FALSE)
 # norm = zero normalize signal (TRUE/FALSE)
 # verbose = print results and plot (TRUE/FALSE) recommend set T for testing and F for large batch analyses
-pwa_plus <- function(pw, fs = 200, ecgGated = T, filt = FALSE, norm = TRUE, verbose = FALSE) {
+pwa_plus <- function(pw, fs = 200, ecgGated = F, filt = FALSE, norm = TRUE, verbose = FALSE) {
 
   # Low pass waveform
   if (isTRUE(filt)) {

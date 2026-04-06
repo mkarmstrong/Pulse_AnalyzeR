@@ -16,7 +16,7 @@ pwdata <- read.csv("R:/Data/KIDS/SCor Data/Katy_project/clean/pwaves_output.csv"
 # Initialize data frame to fill
 pw_indices <- data.frame(matrix(data = NA, nrow = nrow(pwdata), ncol = 44))
 
-# Run analysis and save to pw_indices via a for loop (for larger datasets you could convert to lapply)
+# Run analysis and save to pw_indices via a for loop (you could convert to lapply if prefered)
 for(i in 1:nrow(pwdata)) {
   id <- data.frame(ptid = pwdata[i, 1])                   # Extract ID
   print(unname(id))                                       # Print id to keep track

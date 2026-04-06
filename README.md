@@ -16,12 +16,12 @@ pwdata <- read.csv("R:/Data/KIDS/SCor Data/Katy_project/clean/pwaves_output.csv"
 # Initialize data frame to fill
 pw_indices <- data.frame(matrix(data = NA, nrow = nrow(pwdata), ncol = 44))
 
-# Calculate pulse wave indices and save them to pw_indices via a for loop
+# Run analysis and save to pw_indices via a for loop (for larger datasets you could convert to lapply)
 for(i in 1:nrow(pwdata)) {
   id <- data.frame(ptid = pwdata[i, 1])                   # Extract ID
   print(unname(id))                                       # Print id to keep track
   sig <- as.vector(na.omit(t(pwdata[i, -1])))             # Extract the waveform
-  indices1 <- pwa_plus(sig, fs = 128, filt = T, norm = T) # Calculate indices (change defaults to suit, i.e. fs = 200/1000 etc.)
+  indices1 <- pwa_plus(sig, fs = 200, filt = T, norm = T) # Calculate indices (change defaults to suit, i.e. fs = 200/1000 etc.)
   results <- cbind(id, indices1)                          # Combined data
   pw_indices[i, ] <- results[1,]                          # Save into dataframe
 }

@@ -67,7 +67,7 @@ low_pass_filt <- function(y, fq = 0.1, do.plot = FALSE) {
 
 
 
-# Find diacrotic notch -----------------------------------------------------------------------------------------
+# Find dicrotic notch -----------------------------------------------------------------------------------------
 weighted_dicrotic <- function(pw, plot = FALSE) {
 
   # Get derivatives
@@ -302,7 +302,7 @@ hd <- function(bp_wave, n_harms = 8) {
 
 
 
-# Calculate spectural centroid (used in audio production as "brigtness") -----------------------------------------------------------------------------------------
+# Calculate spectral centroid (used in audio production as "brightness") -----------------------------------------------------------------------------------------
 sc <- function(bp_cycle, 
                window = TRUE,  # Changed default to TRUE
                pow_exp = 2,
@@ -386,7 +386,7 @@ find_peaks <- function (x, m = 3){
 
 
 
-# find intersection of 2 regression slopes (used by psi) -----------------------------------------------------------------------------------------
+# Find intersection of 2 regression slopes (used by psi) -----------------------------------------------------------------------------------------
 lmIntx <- function(fit1, fit2, rnd=2) {
   b1<- fit1$coefficient[1]  #y-int for fit1
   m1<- fit1$coefficient[2]  #slope for fit1
@@ -404,7 +404,7 @@ lmIntx <- function(fit1, fit2, rnd=2) {
 
 
 
-# Calculate angels of a triangle (used by psi) -----------------------------------------------------------------------------------------
+# Calculate angles of a triangle (used by psi) -----------------------------------------------------------------------------------------
 triangle_angles <- function(x1, y1, x2, y2, x3, y3) {
   # Calculate the lengths of the sides using the distance formula
   sideAB <- sqrt((x2 - x1)^2 + (y2 - y1)^2)
@@ -537,7 +537,7 @@ psi <- function(pulse, nsample = 500, fs = 200, plot = F) {
 # ecgGated = was the pulse wave averaged using ecg (TRUE/FALSE)
 # filt = apply low pass filter (TRUE/FALSE)
 # norm = zero normalize signal (TRUE/FALSE)
-# verbose = print results and plot (TRUE/FALSE) recomend set T for testing and F for batch analysis
+# verbose = print results and plot (TRUE/FALSE) recommend set T for testing and F for large batch analyses
 pwa_plus <- function(pw, fs = 200, ecgGated = T, filt = FALSE, norm = TRUE, verbose = FALSE) {
 
   # Low pass waveform

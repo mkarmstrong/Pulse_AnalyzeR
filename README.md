@@ -11,7 +11,7 @@ devtools::source_url("https://raw.githubusercontent.com/mkarmstrong/Pulse_Analyz
 # apply to multiple waveforms stored row wise in one .csv
 
 # Load data (.csv) assumes ID variable is in first column with remaining columns containing the waveform
-pwdata <- read.csv("R:/Data/KIDS/SCor Data/Katy_project/clean/pwaves_output.csv")
+pwdata <- read.csv("R:/Data/path/pwaves.csv")
 
 # Initialize data frame to fill
 pw_indices <- data.frame(matrix(data = NA, nrow = nrow(pwdata), ncol = 43))
@@ -35,5 +35,5 @@ for(i in 1:nrow(pwdata)) {
 colnames(pw_indices) <- colnames(results)
 
 # Save data
-write.csv(pw_indices, "R:/Data/KIDS/SCor Data/Katy_project/clean/pw_metrics.csv", row.names = F)
+write.csv(pw_indices, "R:/Data/path/pwave_indices.csv", row.names = F)
 ```

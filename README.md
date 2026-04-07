@@ -37,3 +37,13 @@ colnames(pw_indices) <- colnames(results)
 # Save data
 write.csv(pw_indices, "R:/Data/path/pwave_indices.csv", row.names = F)
 ```
+
+Alternatively, you could apply the analysis to one waveform. This is a useful sanity check.
+```R
+dat <- read.csv("R:/Data/path/pwaves.csv")
+pw <- as.vector(na.omit(t(dat[10, -1]))); plot(pw) # here you can select the individual waves from pwaves.csv. Currently selecting the 10th wave.
+pwa_plus(pw, ecgGated = F, filt = F, verbose = T) # here you can chage the defaults
+```
+
+
+

@@ -456,7 +456,6 @@ psi <- function(pulse, nsample = 500, fs = 200, plot = F) {
     n = nsample)
   
   pw <- spline_out[['y']]
-  pw <- (pw - min(pw)) / (max(pw) - min(pw))
   
   # create derivatives
   d1 <- fsg721(pw)

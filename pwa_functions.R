@@ -314,11 +314,7 @@ hd <- function(bp_wave, n_harms = 8) {
 
 
 # Calculate spectral centroid (used in audio production as "brightness") -----------------------------------------------------------------------------------------
-sc <- function(bp_cycle, 
-               window = TRUE,  # Changed default to TRUE
-               pow_exp = 2,
-               normalize = FALSE,
-               return_spectrum = FALSE) {
+sc <- function(bp_cycle, window = TRUE, pow_exp = 2, get_spec = FALSE) {
   
   # Input validation
   if (length(bp_cycle) < 10) {
@@ -351,22 +347,8 @@ sc <- function(bp_cycle,
   weights <- mag^pow_exp
   centroid_harm <- sum(freqs * weights) / sum(weights)
   
-  # Centroid in Hz
-  if (normalize) {
-    centroid_norm <- centroid_harm / (half_N - 1)  # Normalize to [0, 1]
-    if (return_spectrum) {
-      return(list(
-        centroid = centroid_harm,
-        centroid_normalized = centroid_norm,
-        magnitude = mag,
-        frequency = freqs
-      ))
-    }
-    return(centroid_norm)
-  }
-  
   # Optional: return full spectrum for  diagnostics
-  if (return_spectrum) {
+  if (get_spec) {
     return(list(
       centroid = centroid_harm,
       magnitude = mag,
@@ -548,7 +530,7 @@ psi <- function(pulse, nsample = 500, fs = 200, plot = F) {
 # filt = apply low pass filter (TRUE/FALSE)
 # norm = zero normalize signal (TRUE/FALSE)
 # verbose = print results and plot (TRUE/FALSE) recommend set T for testing and F for large batch analyses
-pwa_plus <- function(pw, fs = 200, ecgGated = F, filt = FALSE, norm = TRUE, verbose = FALSE) {
+pwa_plus <- function(pw, fs = 200, ecgGated = FALSE, filt = FALSE, norm = TRUE, verbose = FALSE) {
 
   # Low pass waveform
   if (isTRUE(filt)) {
@@ -558,7 +540,7 @@ pwa_plus <- function(pw, fs = 200, ecgGated = F, filt = FALSE, norm = TRUE, verb
   # Remove leading tail and stick it on the end, important if pw is averaged using R wave in the ECG like the nihem does.
   
   if(isTRUE(ecgGated)) {
-    pw <- beat_fix_nihem
+    pw <- beat_fix_nihem(pw)
   }
   
   # Normalize pw amplitude if needed
@@ -579,9 +561,7 @@ pwa_plus <- function(pw, fs = 200, ecgGated = F, filt = FALSE, norm = TRUE, verb
   # Clac time
   sr <- fs
   time <- (0:(length(pw)-1)) / sr
-
-  # get p foot
-  ft_i <- 1
+  end <- length(pw)
   
   # find dicrotic features
   dn_data <- weighted_dicrotic(pw, plot = F) # p @ es
@@ -594,10 +574,6 @@ pwa_plus <- function(pw, fs = 200, ecgGated = F, filt = FALSE, norm = TRUE, verb
   # find max (SBP)
   max_pw_i <- which.max(pw)
   
-  # Calc sub endocardial variability ratio
-  end <- length(pw)
-  sevr <- (sum(pw[(e_i+1):end])/sr) / (sum(pw[round(ft_i):e_i])/sr)
-  
   # Calc harmonic distortion
   har_dist <- hd(pw)
   
@@ -609,10 +585,10 @@ pwa_plus <- function(pw, fs = 200, ecgGated = F, filt = FALSE, norm = TRUE, verb
   p_sharp <- pulse_sharp$psi
   
   # Find a
-  a_i <- which.max(d2[1:which.max(d1)]) # basically ft_i
+  a_i <- which.max(d2[1:which.max(d1)]) # p foot
   
   # Find b
-  b_i <- which.min(d2[ft_i:max_pw_i])
+  b_i <- which.min(d2[a_i:max_pw_i])
   
   # Find c
   # c and e can be confused so just enforce a min distance so c doesn't coincide with e
@@ -652,6 +628,9 @@ pwa_plus <- function(pw, fs = 200, ecgGated = F, filt = FALSE, norm = TRUE, verb
 
   # plot(d2[b_i:d_i] ~ time[b_i:d_i])
   # lines(x = c(time[b_i], time[c_i]), y = c(d2[b_i], d2[c_i]), col = 4, lwd = 2)
+  
+  # Calc sub endocardial variability ratio
+  sevr <- (sum(pw[(e_i+1):end])/sr) / (sum(pw[a_i:e_i])/sr)
 
   # Find pulse wave inflections --------------------------------------------
 
@@ -691,7 +670,7 @@ pwa_plus <- function(pw, fs = 200, ecgGated = F, filt = FALSE, norm = TRUE, verb
 
   # Calculate augmentation index
   ap  <- (pw[p2_i] - pw[p1_in_i])
-  pp  <- (pw[max_pw_i] - pw[ft_i])
+  pp  <- (pw[max_pw_i] - pw[a_i])
   aix <- (ap / pp) * 100
 
   # diastolic decay ---------------------------------------------------------
@@ -726,12 +705,12 @@ pwa_plus <- function(pw, fs = 200, ecgGated = F, filt = FALSE, norm = TRUE, verb
          ylab = "Pressure (mmHg)",
          xlab = "Time (s)")
     grid(NULL,NULL, lty = 3, col = "lightgrey")
-    points(x = c(time[ft_i],
+    points(x = c(time[a_i],
                  time[max_pw_i],
                  time[p2_i],
                  time[e_i],
                  time[f_i]),
-           y = c(pw[ft_i],
+           y = c(pw[a_i],
                  pw[max_pw_i],
                  pw[p2_i],
                  pw[e_i],
@@ -831,7 +810,7 @@ pwa_plus <- function(pw, fs = 200, ecgGated = F, filt = FALSE, norm = TRUE, verb
     # areas
     a1,
     a2,
-    ipa = (sum(pw[(e_i+1):end])/sr) / (sum(pw[a_i:e_i])/sr),
+    ipa = sevr,
     # DERIVATIVE I
     # amplitudes
     ms = max(d1)/pw[max_pw_i],
@@ -858,7 +837,6 @@ pwa_plus <- function(pw, fs = 200, ecgGated = F, filt = FALSE, norm = TRUE, verb
     har_dist,
     dbp_slope = lin_slope,
     dpdt_slope = max(d1),
-    sevr = sevr, # same as ipa above
     ap_mmHg = ap,
     aix = aix,
     p3_sec = time[f_i],

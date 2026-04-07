@@ -291,8 +291,6 @@ beat_fix_nihem <- function(x, plot = FALSE) {
 
 # Calculate harmonic distortion -----------------------------------------------------------------------------------------
 hd <- function(bp_wave, n_harms = 8) {
-  # Optional: normalize amplitude (doesn't affect HD calculation)
-  bp_wave <- (bp_wave - min(bp_wave)) / (max(bp_wave) - min(bp_wave))
   
   # Calculate discrete Fourier transform (DFT)
   fft_coeffs <- fft(bp_wave)

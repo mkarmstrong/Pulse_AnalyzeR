@@ -447,7 +447,7 @@ psi <- function(pulse, nsample = 500, fs = 200, plot = F) {
     n = nsample)
   
   pw <- spline_out[['y']]
-  
+
   # create derivatives
   d1 <- fsg721(pw)
   d2 <- fsg721(fsg721(pw))
@@ -531,15 +531,13 @@ psi <- function(pulse, nsample = 500, fs = 200, plot = F) {
 }
 
 
-
-
 # The mother function, brings all the above together plus some additional -----------------------------------------------------------------------------------------
 # fs = sampling frequency
 # ecgGated = was the pulse wave averaged using ecg (TRUE/FALSE)
 # filt = apply low pass filter (TRUE/FALSE)
 # norm = zero normalize signal (TRUE/FALSE)
 # verbose = print results and plot (TRUE/FALSE) recommend set T for testing and F for large batch analyses
-pwa_plus <- function(pw, fs = 200, ecgGated = FALSE, filt = FALSE, norm = TRUE, verbose = FALSE) {
+pwa_plus <- function(pw, fs = 200, ecgGated = F, filt = FALSE, norm = TRUE, verbose = FALSE) {
 
   # Low pass waveform
   if (isTRUE(filt)) {
@@ -554,7 +552,8 @@ pwa_plus <- function(pw, fs = 200, ecgGated = FALSE, filt = FALSE, norm = TRUE, 
   
   # Normalize pw amplitude if needed
   if(isTRUE(norm)) {
-    pw <- (pw - mean(pw)) / sd(pw)
+    #pw <- (pw - mean(pw)) / sd(pw)             # zero normalization
+    pw <- (pw - min(pw)) / (max(pw) - min(pw)) # min0-max1 normalization
   }
   
   # Calc derivatives
@@ -597,7 +596,9 @@ pwa_plus <- function(pw, fs = 200, ecgGated = FALSE, filt = FALSE, norm = TRUE, 
   a_i <- which.max(d2[1:which.max(d1)]) # p foot
   
   # Find b
-  b_i <- which.min(d2[a_i:max_pw_i])
+  nds <- find_peaks(-d2)
+  b_i <- nds[nds > a_i][1]
+  #b_i <- which.min(d2[a_i:max_pw_i]) + a_i - 1
   
   # Find c
   # c and e can be confused so just enforce a min distance so c doesn't coincide with e
@@ -631,15 +632,15 @@ pwa_plus <- function(pw, fs = 200, ecgGated = FALSE, filt = FALSE, norm = TRUE, 
   a1 = sum(pw[a_i:e_i])/sr
   a2 = sum(pw[(e_i+1):end])/sr
   
+  # Calc sub endocardial variability ratio (useless when using norm = T)
+  sevr <- (a2 / a1)
+  
   # Slopes
   slope_b_c <- (d2[b_i] - d2[c_i]) / (time[b_i] - time[c_i])/d2[a_i]
   slope_b_d <- (d2[d_i] - d2[b_i]) / (time[d_i] - time[b_i])/d2[a_i]
 
   # plot(d2[b_i:d_i] ~ time[b_i:d_i])
   # lines(x = c(time[b_i], time[c_i]), y = c(d2[b_i], d2[c_i]), col = 4, lwd = 2)
-  
-  # Calc sub endocardial variability ratio
-  sevr <- (sum(pw[(e_i+1):end])/sr) / (sum(pw[a_i:e_i])/sr)
 
   # Find pulse wave inflections --------------------------------------------
 
@@ -662,7 +663,6 @@ pwa_plus <- function(pw, fs = 200, ecgGated = FALSE, filt = FALSE, norm = TRUE, 
 
   # Determine waveform type -------------------------------------------------
 
-  # Murgo type is determined from the systolic inflection (ie p1_in_i.
   # If d2 is >= 0, then the early systolic p1 inflection was present.
   if(p1_in_i != max_pw_i) {
     # inflection < max_pw_i

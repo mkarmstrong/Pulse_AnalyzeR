@@ -79,9 +79,9 @@ weighted_dicrotic <- function(pw, fs = 200, plot = FALSE) {
   end <- length(pw)
   
   # Isolate notch area with 1st derivatives
-  nni <- which.min(dp1)
+  #nni <- which.min(dp1)
   
-  # FIND DICROTIC DEPRESSION ------------------------------------------------
+  # FIND DICROTIC DEPRESSION 
   
   # # End index without potential perturbation at end diastole
   # end2 <- end * .9
@@ -108,20 +108,30 @@ weighted_dicrotic <- function(pw, fs = 200, plot = FALSE) {
   alpha <- (5 * tau_wmax - 2 * tau_wmax + 1) / (1 - tau_wmax)
   alpha <- max(1.5, min(4.5, alpha))
   
-  beta_dis <- beta_dist(pw, alpha, 5)
+  beta_dis <- beta_dist(pw, alpha, 5, plot = F)
   
   # check with standard weighting first
   weighted_beta <- dp2 * beta_dis
   peaks <- which(diff(sign(diff(weighted_beta))) == -2) + 1
   peaks <- peaks[peaks > which.max(pw)]
   
+  # plot(pw); abline(v=peaks, lty=2)
+  # par(new = T); plot(weighted_beta, type = "l", col=2)
+  
+  # if the two peaks after sbp are within 75% of each other, sharpen the beta
+  # this works better for peripheral waveforms where p2 can get mixed up
+  # for central waves the "if" below will always be true (mostly) but it just amplifies the d2 peak associated with dicrotic notch, so not an issue (not robustly tested). 
+  # 0.75 is arbitrary, but seems to work quite well
   if (length(peaks) >= 2) {
-    top2 <- sort(weighted_beta[peaks], decreasing = TRUE)[1:2]
-    # if the two largest peaks are within 50% of each other, sharpen
-    if (top2[2] / top2[1] > 0.5) {
+    top2 <- weighted_beta[peaks][1:2]
+    if (top2[1] / top2[2] > 0.75) {
       weighted_beta <- dp2 * beta_dis^2.5
     }
   }
+  
+  # maybe there is an argument to always use the ^2.5 weighting. 
+  # but the original works very well, and changes may/always break stuff
+  # if it ain't broke, don't fix it (for now)
   
   dic <- which.max(weighted_beta)
   
@@ -130,9 +140,9 @@ weighted_dicrotic <- function(pw, fs = 200, plot = FALSE) {
   # plot(weighted_beta, type="l",col=2); abline(v=dic, col=2, lty=2)
   # par(new=T)
   # plot(beta_dis, type="l", col=3)
+
   
-  
-  # FIND DICROTIC PEAK ------------------------------------------------------
+  # FIND DICROTIC PEAK
   
   end3 <- ((end - dic) * .6) + dic # 60% of diastolic duration
   
@@ -173,7 +183,7 @@ weighted_dicrotic <- function(pw, fs = 200, plot = FALSE) {
   # plot(dp1, type='o',col="grey")
   # abline(v = c(dic, dia), h = 0)
   
-  # PLOTS -------------------------------------------------------------------
+  # PLOTS
   
   if(isTRUE(plot)) {
     plot(pw, type = "l", lwd=2, ylab="BP (mmHg)")
@@ -189,7 +199,6 @@ weighted_dicrotic <- function(pw, fs = 200, plot = FALSE) {
                     dicrotic_peak = dia))
   
 }
-
 
 
 

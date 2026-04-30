@@ -22,13 +22,13 @@ for(i in 1:nrow(pwdata)) {
   id <- data.frame(ptid = pwdata[i, 1])       # Extract ID
   print(unname(id))                           # Print id to keep track
   sig <- as.vector(na.omit(t(pwdata[i, -1]))) # Extract the waveform
-  indices1 <- pwa_plus(sig, 
-                       ecgGated = F, 
-                       fs = 200, 
-                       filt = T, 
-                       norm = T)              # Calculate indices (change defaults to suit, i.e. fs = 200/1000 etc.)
-  results <- cbind(id, indices1)              # Combined data
-  pw_indices[i, ] <- results[1,]              # Save into dataframe
+  indices1 <- pwa_plus(sig,                   # the pulse wave
+                       ecgGated = F,          # how was the wave ensembled? using ecg (set T), using P foot (set F)
+                       fs = 200,              # sample rate (Hz)
+                       filt = T,              # apply a low pass filter (T/F)
+                       norm = T)              # normalize to 0-1 range (T/F)
+  results <- cbind(id, indices1)              # combined data
+  pw_indices[i, ] <- results[1,]              # save into dataframe
 }
 
 # Get column names
@@ -45,5 +45,11 @@ pw <- as.vector(na.omit(t(dat[10, -1]))); plot(pw) # here you can select the ind
 pwa_plus(pw, ecgGated = F, filt = F, verbose = T) # here you can chage the defaults
 ```
 
-
+Load pre-trained LightGBM model
+```R
+# load model
+model <- lgb.load("https://raw.githubusercontent.com/mkarmstrong/Pulse_AnalyzeR/refs/heads/main/cfpwv_lgbm_model.txt.R")
+# predict cfPWV on new data set
+predictions <- predict(model, as.matrix(new_data))
+```
 

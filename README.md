@@ -45,10 +45,15 @@ pw <- as.vector(na.omit(t(dat[10, -1]))); plot(pw) # here you can select the ind
 pwa_plus(pw, ecgGated = F, filt = F, verbose = T) # here you can chage the defaults
 ```
 
-Load pre-trained LightGBM model
+Load pre-trained LightGBM models
 ```R
-# load model
+# load model trained with 0-1 calibration
 model <- lgb.load("https://raw.githubusercontent.com/mkarmstrong/Pulse_AnalyzeR/refs/heads/main/cfpwv_lgbm_model.txt.R")
+# predict cfPWV on new data set
+predictions <- predict(model, as.matrix(new_data))
+
+# load model trained with mean-diastolic calibration
+model <- lgb.load("https://raw.githubusercontent.com/mkarmstrong/Pulse_AnalyzeR/refs/heads/main/cfpwv_lgbm_model_nn.txt.R")
 # predict cfPWV on new data set
 predictions <- predict(model, as.matrix(new_data))
 ```

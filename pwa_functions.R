@@ -808,7 +808,7 @@ pwa_plus <- function(pw, fs = 200, ecgGated = F, filt = FALSE, norm = TRUE, verb
     ratio_t = time[max_pw_i]/time[e_i],
     prop_delt_t = (time[f_i] - time[max_pw_i])/time[end],
     p1_dia_t = time[f_i] - time[p1_in_i],
-    t_p2_dia = time[f_i] - time[p2_i],
+    p2_dia_t = time[f_i] - time[p2_i],
     ipr = 60/time[end],
     # amplitudes
     ai = (pw[p2_i] - pw[p1_in_i])/pw[max_pw_i],
@@ -816,6 +816,7 @@ pwa_plus <- function(pw, fs = 200, ecgGated = F, filt = FALSE, norm = TRUE, verb
     ri_p1 = pw[f_i]/pw[p1_in_i],
     ri_p2 = pw[f_i]/pw[p2_i],
     ratio_p2_p1 = pw[p2_i]/pw[p1_in_i],
+    ratio_b_p1 = d2[b_i]/pw[p1_in_i],
     # areas
     a1,
     a2,
@@ -825,33 +826,34 @@ pwa_plus <- function(pw, fs = 200, ecgGated = F, filt = FALSE, norm = TRUE, verb
     ms = max(d1)/pw[max_pw_i],
     # DERIVATIVE II
     # amplitudes
-    b_a = d2[b_i]/d2[a_i],
-    c_a = d2[c_i]/d2[a_i],
-    d_a = d2[d_i]/d2[a_i],
-    e_a = d2[e_i]/d2[a_i],
+    ba = d2[b_i]/d2[a_i],
+    ca = d2[c_i]/d2[a_i],
+    da = d2[d_i]/d2[a_i],
+    ea = d2[e_i]/d2[a_i],
     agi = (d2[b_i] - d2[c_i] - d2[d_i] - d2[e_i])/d2[a_i],
     agi_int = (d2[b_i] - d2[e_i])/d2[a_i],
     agi_mod = (d2[b_i] - d2[c_i] - d2[d_i])/d2[a_i],
-    amb_amp1 = d2[b_i]/pw[p1_in_i],
+    b_p1 = d2[b_i]/pw[p1_in_i],
     # timings
-    tb_c = time[c_i] - time[b_i],
-    tb_d = time[d_i] - time[b_i],
+    bc_t = time[c_i] - time[b_i],
+    bd_t = time[d_i] - time[b_i],
     # slopes
-    slope_b_c,
-    slope_b_d,
+    bc_slope = slope_b_c,
+    bd_slope = slope_b_d,
     # COMBINED
     ipad = (a2/a1) + d_i/a_i,
     k = d2[max_pw_i]/((pw[max_pw_i]-pw[max_d1_i])/pw[max_pw_i]),
     # OTHER ADDITIONS
     har_dist,
+    spec_cent,
+    p_sharp,
     dbp_slope = lin_slope,
     dpdt_slope = max(d1),
-    ap_mmHg = ap,
-    aix = aix,
-    p3_sec = time[f_i],
-    p1_alt_sec = time[p1_in_i],
-    spec_cent,
-    p_sharp
+    p3_t = time[f_i],
+    # REDUNDANT INCLUDED FOR COMPLETNESS
+    p1_alt_sec = time[p1_in_i], # p1 shoulder (opposed to inflection)
+    ap, # augmentation pressure
+    aix = aix # augmentation index as a percentage (see ai)
   )
 
   # round values in df

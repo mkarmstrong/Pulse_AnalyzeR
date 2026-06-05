@@ -57,4 +57,3 @@ model <- lgb.load("https://raw.githubusercontent.com/mkarmstrong/Pulse_AnalyzeR/
 # predict cfPWV on new data set
 predictions <- predict(model, as.matrix(new_data))
 ```
-

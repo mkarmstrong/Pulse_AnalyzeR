@@ -8,31 +8,29 @@ Example: apply the pulse wave analyzer using a for loop
 # load required functions from this repo
 devtools::source_url("https://raw.githubusercontent.com/mkarmstrong/Pulse_AnalyzeR/refs/heads/main/pwa_functions.R")
 
-# apply to multiple waveforms stored row wise in one .csv
+# apply to multiple waveforms stored row wise in one .csv (with the id in the first column)
 
 # Load data (.csv) assumes ID variable is in first column with remaining columns containing the waveform
 pwdata <- read.csv("R:/Data/path/pwaves.csv")
 
-# Initialize data frame to fill
-pw_indices <- data.frame(matrix(data = NA, nrow = nrow(pwdata), ncol = 43))
+# Initialize list to fill
+pw_indices <- vector("list", nrow(pwdata))
 
-# Run analysis and save to pw_indices via a for loop (you could convert to lapply if prefered)
 # Calculate pulse wave indices and save them to pw_indices via a for loop
 for(i in 1:nrow(pwdata)) {
-  id <- data.frame(ptid = pwdata[i, 1])       # Extract ID
-  print(unname(id))                           # Print id to keep track
-  sig <- as.vector(na.omit(t(pwdata[i, -1]))) # Extract the waveform
-  indices1 <- pwa_plus(sig,                   # the pulse wave
-                       ecgGated = F,          # how was the wave ensembled? using ecg (set T), using P foot (set F)
-                       fs = 200,              # sample rate (Hz)
-                       filt = T,              # apply a low pass filter (T/F)
-                       norm = T)              # normalize to 0-1 range (T/F)
-  results <- cbind(id, indices1)              # combined data
-  pw_indices[i, ] <- results[1,]              # save into dataframe
+  id <- data.frame(ptid = pwdata[i, 1])                             # Extract ID
+  cat("Processing", i, "of", nrow(pwdata), ":", pwdata[i, 1], "\n") # Print id to keep track
+  sig <- as.vector(na.omit(t(pwdata[i, -1])))                       # Extract the waveform
+  indices1 <- pwa_plus(sig,                                         # the pulse wave
+                       ecgGated = FALSE,                            # Ensembled using ecg (set T), using P foot (set F)
+                       fs = 200,                                    # Sample rate (Hz)
+                       filt = T,                                    # Apply a low pass filter (T/F)
+                       norm = F)                                    # Normalize to 0-1 range (T/F)
+  pw_indices[[i]] <- cbind(id, indices1)                            # Save into pw_indices list
 }
 
-# Get column names
-colnames(pw_indices) <- colnames(results)
+# Combine
+pw_indices <- do.call(rbind, pw_indices)
 
 # Save data
 write.csv(pw_indices, "R:/Data/path/pwave_indices.csv", row.names = F)

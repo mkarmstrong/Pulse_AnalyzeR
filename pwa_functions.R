@@ -1,14 +1,79 @@
-# Calculates derivative using SG filter (same as KP & ADH) -----------------------------------------------------------------------------------------
+# fixes the beat so that it spans foot to foot (opposed to ecg R to R)
+#' Foot finding based on local max of the 3rd derivative between index 1 and max in 2nd derivative
+beat_fix_nihem <- function(x, plot = FALSE) {
+  
+  p <- x
+  pw <- low_pass_filt(p, 0.08)
+  
+  d1 <- fsg721(pw)
+  d2 <- fsg721(fsg721(pw))
+  d3 <- fsg721(fsg721(fsg721(pw)))
+  
+  #plot(pw,  type="l"); par(new=T); plot(d2, type="l", col=2); abline(v=which.max(d3[1:which.max(d2)]))
+  
+  foot_idx <- which.max(d3[1:which.max(d2)])
+  
+  #plot(pw[1:15]); abline(v=foot_idx)
+  
+  x1 <- p[1:foot_idx]
+  x2 <- p[(foot_idx):length(pw)]
+  pw2 <- c(x2, x1)
+  pw2 <- low_pass_filt(pw2)
+  
+  #plot(pw2)
+
+  if(isTRUE(plot)) {
+    plot(pw, type="l", lwd=2, col=2)
+    lines(p, col=1, lwd=2)
+    lines(pw2, col=3, lwd=2)
+    abline(v = foot_idx)
+  }
+  
+  return(pw2)
+  
+}
+
+#-----------------------------------------------------------------------------------------------
+# create a beta distribution
+beta_dist <- function(x, alpha, beta = 5, plot = FALSE) {
+  
+  # start of distribution
+  s_d <- which.max(x)
+  
+  # Generate tau values
+  l_o <- length(x) - s_d
+  tau <- seq(0, 1, length.out = l_o)
+  
+  # Calculate PDF values using custom formula
+  y1 <- tau^(alpha - 1) * (1 - tau)^(beta - 1)
+  
+  y2 <- c(rep(0, s_d), y1)
+  
+  y3 <- (0+(y2-min(y2))*(1-0)/(max(y2)-min(y2)))
+  
+  # Plot the custom beta distribution curve
+  if(isTRUE(plot)) {
+    # Plot the gamma distribution curve
+    plot(y3, type = "l", col = "blue", lwd = 2,
+         main = "Beta Distribution Curve",
+         xlab = "X",
+         ylab = "Probability Density")
+  }
+  
+  return(y3)
+  
+}
+
+#-----------------------------------------------------------------------------------------------
+# calculates the first derivative with a second order polynomial SG filter
 fsg721 <- function(x, order = 2, smth = 11) {
   sg <- signal::sgolay(p = order, n = smth, m = 1)
   sig <- signal::filter(sg, x)
   return(sig)
 }
 
-
-
-
-# Applies low pass filter -----------------------------------------------------------------------------------------
+#-----------------------------------------------------------------------------------------------
+# applies second order low pass filter
 low_pass_filt <- function(y, fq = 0.1, do.plot = FALSE) {
   
   if (any(is.na(y))) stop("y contains NA")
@@ -62,12 +127,37 @@ low_pass_filt <- function(y, fq = 0.1, do.plot = FALSE) {
   
   # return filtered signal
   return(filt.sig)
+  
 }
 
+#-----------------------------------------------------------------------------------------------
+# finds exact point of crossings using linear segments
+root_spline <- function (x, y, y0 = 0, verbose = FALSE) {
 
+  if (is.unsorted(x)) {
+    ind <- order(x)
+    x <- x[ind]; y <- y[ind]
+  }
+  
+  z <- y - y0
+  ## which piecewise linear segment crosses zero?
+  k <- which(z[-1] * z[-length(z)] <= 0)
+  ## analytical root finding
+  xr <- x[k] - z[k] * (x[k + 1] - x[k]) / (z[k + 1] - z[k])
+  
+  ## make a plot?
+  if (verbose) {
+    plot(x, y, "l"); abline(h = y0, lty = 2)
+    points(xr, rep.int(y0, length(xr)))
+  }
+  
+  ## return roots
+  return(xr)
+  
+}
 
-
-# Find dicrotic notch -----------------------------------------------------------------------------------------
+#-----------------------------------------------------------------------------------------------
+# finds the dicrotic notch on the pulse waveform using the weighted 2nd derivative
 weighted_dicrotic <- function(pw, fs = 200, plot = FALSE) {
 
   # Get derivatives
@@ -81,7 +171,7 @@ weighted_dicrotic <- function(pw, fs = 200, plot = FALSE) {
   # Isolate notch area with 1st derivatives
   #nni <- which.min(dp1)
   
-  # FIND DICROTIC DEPRESSION 
+  # FIND DICROTIC DEPRESSION ------------------------------------------------
   
   # # End index without potential perturbation at end diastole
   # end2 <- end * .9
@@ -142,7 +232,7 @@ weighted_dicrotic <- function(pw, fs = 200, plot = FALSE) {
   # plot(beta_dis, type="l", col=3)
 
   
-  # FIND DICROTIC PEAK
+  # FIND DICROTIC PEAK ------------------------------------------------------
   
   end3 <- ((end - dic) * .6) + dic # 60% of diastolic duration
   
@@ -183,7 +273,7 @@ weighted_dicrotic <- function(pw, fs = 200, plot = FALSE) {
   # plot(dp1, type='o',col="grey")
   # abline(v = c(dic, dia), h = 0)
   
-  # PLOTS
+  # PLOTS -------------------------------------------------------------------
   
   if(isTRUE(plot)) {
     plot(pw, type = "l", lwd=2, ylab="BP (mmHg)")
@@ -201,104 +291,8 @@ weighted_dicrotic <- function(pw, fs = 200, plot = FALSE) {
 }
 
 
-
-# Calculate beta distribution (used by weighted_dicrotic) -----------------------------------------------------------------------------------------
-beta_dist <- function(x, alpha, beta = 5, plot = FALSE) {
-  
-  # start of distribution
-  s_d <- which.max(x)
-  
-  # Generate tau values
-  l_o <- length(x) - s_d
-  tau <- seq(0, 1, length.out = l_o)
-  
-  # Calculate PDF values using custom formula
-  y1 <- tau^(alpha - 1) * (1 - tau)^(beta - 1)
-  
-  y2 <- c(rep(0, s_d), y1)
-  
-  y3 <- (0+(y2-min(y2))*(1-0)/(max(y2)-min(y2)))
-  
-  # Plot the custom beta distribution curve
-  if(isTRUE(plot)) {
-    # Plot the gamma distribution curve
-    plot(y3, type = "l", col = "blue", lwd = 2,
-         main = "Beta Distribution Curve",
-         xlab = "X",
-         ylab = "Probability Density")
-  }
-  
-  return(y3)
-}
-
-
-
-
-# Finds zero crossing -----------------------------------------------------------------------------------------
-root_spline <- function (x, y, y0 = 0, verbose = FALSE) {
-
-  if (is.unsorted(x)) {
-    ind <- order(x)
-    x <- x[ind]; y <- y[ind]
-  }
-  
-  z <- y - y0
-  ## which piecewise linear segment crosses zero?
-  k <- which(z[-1] * z[-length(z)] <= 0)
-  ## analytical root finding
-  xr <- x[k] - z[k] * (x[k + 1] - x[k]) / (z[k + 1] - z[k])
-  
-  ## make a plot?
-  if (verbose) {
-    plot(x, y, "l"); abline(h = y0, lty = 2)
-    points(xr, rep.int(y0, length(xr)))
-  }
-  
-  ## return roots
-  return(xr)
-}
-
-
-
-
-# Removes leading tail when pw is ensembled by gating to the ecg (per NIHem device) -----------------------------------------------------------------------------------------
-beat_fix_nihem <- function(x, plot = FALSE) {
-  
-  p <- x
-  pw <- low_pass_filt(p, 0.08)
-  
-  d1 <- fsg721(pw)
-  d2 <- fsg721(fsg721(pw))
-  d3 <- fsg721(fsg721(fsg721(pw)))
-  
-  #plot(pw,  type="l"); par(new=T); plot(d2, type="l", col=2); abline(v=which.max(d3[1:which.max(d2)]))
-  
-  foot_idx <- which.max(d3[1:which.max(d2)])
-  
-  #plot(pw[1:15]); abline(v=foot_idx)
-  
-  x1 <- p[1:foot_idx]
-  x2 <- p[(foot_idx):length(pw)]
-  pw2 <- c(x2, x1)
-  pw2 <- low_pass_filt(pw2)
-  
-  #plot(pw2)
-
-  if(isTRUE(plot)) {
-    plot(pw, type="l", lwd=2, col=2)
-    lines(p, col=1, lwd=2)
-    lines(pw2, col=3, lwd=2)
-    abline(v = foot_idx)
-  }
-  
-  return(pw2)
-  
-}
-
-
-
-
-# Calculate harmonic distortion -----------------------------------------------------------------------------------------
+#-----------------------------------------------------------------------------------------------
+# harmonic distortion
 hd <- function(bp_wave, n_harms = 8) {
   
   # Calculate discrete Fourier transform (DFT)
@@ -319,10 +313,8 @@ hd <- function(bp_wave, n_harms = 8) {
   return(hd_value)
 }
 
-
-
-
-# Calculate spectral centroid (used in audio production as "brightness") -----------------------------------------------------------------------------------------
+#-----------------------------------------------------------------------------------------------
+# Spectral centroid
 sc <- function(bp_cycle, window = TRUE, pow_exp = 2, get_spec = FALSE) {
   
   # Input validation
@@ -368,10 +360,8 @@ sc <- function(bp_cycle, window = TRUE, pow_exp = 2, get_spec = FALSE) {
   return(centroid_harm)
 }
 
-
-
-
-# Find peaks (copied from Charlton) -----------------------------------------------------------------------------------------
+#-----------------------------------------------------------------------------------------------
+# find peaks, same as Charlton
 find_peaks <- function (x, m = 3){
   shape <- diff(sign(diff(x, na.pad = FALSE)))
   pks <- sapply(which(shape < 0), FUN = function(i){
@@ -385,10 +375,8 @@ find_peaks <- function (x, m = 3){
   pks
 }
 
-
-
-
-# Find intersection of 2 regression slopes (used by psi) -----------------------------------------------------------------------------------------
+#-----------------------------------------------------------------------------------------------
+# fins intersection of 2 lm slopes
 lmIntx <- function(fit1, fit2, rnd=2) {
   b1<- fit1$coefficient[1]  #y-int for fit1
   m1<- fit1$coefficient[2]  #slope for fit1
@@ -403,10 +391,8 @@ lmIntx <- function(fit1, fit2, rnd=2) {
   }
 }
 
-
-
-
-# Calculate angles of a triangle (used by psi) -----------------------------------------------------------------------------------------
+#-----------------------------------------------------------------------------------------------
+# calculate angles of a triangle
 triangle_angles <- function(x1, y1, x2, y2, x3, y3) {
   # Calculate the lengths of the sides using the distance formula
   sideAB <- sqrt((x2 - x1)^2 + (y2 - y1)^2)
@@ -433,10 +419,8 @@ triangle_angles <- function(x1, y1, x2, y2, x3, y3) {
   return(angles)
 }
 
-
-
-
-# Calculate pulse sharpness index -----------------------------------------------------------------------------------------
+#-----------------------------------------------------------------------------------------------
+# calculat pulse sharpness
 psi <- function(pulse, nsample = 500, fs = 200, plot = F) {
   
   pw <- low_pass_filt(pulse, fq = 0.30)
@@ -530,13 +514,8 @@ psi <- function(pulse, nsample = 500, fs = 200, plot = F) {
   return(df)
 }
 
-
-# The mother function, brings all the above together plus some additional -----------------------------------------------------------------------------------------
-# fs = sampling frequency
-# ecgGated = was the pulse wave averaged using ecg (TRUE/FALSE)
-# filt = apply low pass filter (TRUE/FALSE)
-# norm = zero normalize signal (TRUE/FALSE)
-# verbose = print results and plot (TRUE/FALSE) recommend set T for testing and F for large batch analyses
+#-----------------------------------------------------------------------------------------------
+# this function puts all of the above together
 pwa_plus <- function(pw, fs = 200, ecgGated = F, filt = FALSE, norm = TRUE, verbose = FALSE) {
 
   # Low pass waveform
@@ -870,12 +849,4 @@ pwa_plus <- function(pw, fs = 200, ecgGated = F, filt = FALSE, norm = TRUE, verb
   return(df)
 
 }
-
-
-
-
-
-
-
-
 

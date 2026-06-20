@@ -65,7 +65,7 @@ beta_dist <- function(x, alpha, beta = 5, plot = FALSE) {
 }
 
 #-----------------------------------------------------------------------------------------------
-# calculates the first derivative with a second order polynomial SG filter
+# calculates the first derivative with a second order polynomial SG filter (per Alun Huges and Kim Parker)
 fsg721 <- function(x, order = 2, smth = 11) {
   sg <- signal::sgolay(p = order, n = smth, m = 1)
   sig <- signal::filter(sg, x)
@@ -157,7 +157,7 @@ root_spline <- function (x, y, y0 = 0, verbose = FALSE) {
 }
 
 #-----------------------------------------------------------------------------------------------
-# finds the dicrotic notch on the pulse waveform using the weighted 2nd derivative
+# finds the dicrotic notch on the pulse waveform using the beta weighted 2nd derivative
 weighted_dicrotic <- function(pw, fs = 200, plot = FALSE) {
 
   # Get derivatives
@@ -361,7 +361,7 @@ sc <- function(bp_cycle, window = TRUE, pow_exp = 2, get_spec = FALSE) {
 }
 
 #-----------------------------------------------------------------------------------------------
-# find peaks, same as Charlton
+# find peaks
 find_peaks <- function (x, m = 3){
   shape <- diff(sign(diff(x, na.pad = FALSE)))
   pks <- sapply(which(shape < 0), FUN = function(i){
@@ -376,7 +376,7 @@ find_peaks <- function (x, m = 3){
 }
 
 #-----------------------------------------------------------------------------------------------
-# fins intersection of 2 lm slopes
+# finds intersection of 2 linear regression slopes
 lmIntx <- function(fit1, fit2, rnd=2) {
   b1<- fit1$coefficient[1]  #y-int for fit1
   m1<- fit1$coefficient[2]  #slope for fit1
@@ -515,7 +515,7 @@ psi <- function(pulse, nsample = 500, fs = 200, plot = F) {
 }
 
 #-----------------------------------------------------------------------------------------------
-# this function puts all of the above together
+# this function puts all of the above together plus some additional calculations
 pwa_plus <- function(pw, fs = 200, ecgGated = F, filt = FALSE, norm = TRUE, verbose = FALSE) {
 
   # Low pass waveform
@@ -775,7 +775,7 @@ pwa_plus <- function(pw, fs = 200, ecgGated = F, filt = FALSE, norm = TRUE, verb
 
   # Variables ---------------------------------------------------------------
 
-  # Params per Charlton at DOI:10.1088/1361-6579/aabe6a
+  # Save pulse wave features into a data frame
   df <- data.frame(
     # PRESSURE
     # timings

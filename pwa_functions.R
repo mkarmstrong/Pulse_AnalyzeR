@@ -171,7 +171,7 @@ weighted_dicrotic <- function(pw, fs = 200, plot = FALSE) {
   # Isolate notch area with 1st derivatives
   #nni <- which.min(dp1)
   
-  # FIND DICROTIC DEPRESSION ------------------------------------------------
+  # FIND DICROTIC DEPRESSION 
   
   # # End index without potential perturbation at end diastole
   # end2 <- end * .9
@@ -232,7 +232,7 @@ weighted_dicrotic <- function(pw, fs = 200, plot = FALSE) {
   # plot(beta_dis, type="l", col=3)
 
   
-  # FIND DICROTIC PEAK ------------------------------------------------------
+  # FIND DICROTIC PEAK 
   
   end3 <- ((end - dic) * .6) + dic # 60% of diastolic duration
   
@@ -242,7 +242,7 @@ weighted_dicrotic <- function(pw, fs = 200, plot = FALSE) {
   if(sum(dp2[dic:end3] < 0) < 1) {
     dia <- 9999
   } else {
-    dia <- which.min(dp2[dic:end3]) + dic
+    dia <- which.min(dp2[dic:end3]) + dic - 1
   }
   
   # plot(pw, type="l", lwd=2)
@@ -257,6 +257,8 @@ weighted_dicrotic <- function(pw, fs = 200, plot = FALSE) {
     
     hold <- root_spline(1:length(dp1[(dic):end3]), dp1[(dic):end3])
     dia_hold <- hold[dp1[(dic):end3][hold] > 0]
+    # error trap if no 0 crossing is above zero take the max of dp1
+    if (length(dia_hold) == 0) {dia_hold <- which.max(dp1[(dic):end3]) - 1}
     
     # if more than 1 peak is found use the highest peak
     if(length(dia_hold) > 1) {
@@ -273,7 +275,7 @@ weighted_dicrotic <- function(pw, fs = 200, plot = FALSE) {
   # plot(dp1, type='o',col="grey")
   # abline(v = c(dic, dia), h = 0)
   
-  # PLOTS -------------------------------------------------------------------
+  # PLOTS 
   
   if(isTRUE(plot)) {
     plot(pw, type = "l", lwd=2, ylab="BP (mmHg)")
@@ -285,11 +287,13 @@ weighted_dicrotic <- function(pw, fs = 200, plot = FALSE) {
     plot(beta_dis, type="l", col=3)
   }
   
+  if (length(dia) == 0) dia <- NA
+  if (length(dic) == 0) dic <- NA
+  
   return(data.frame(dicrotic_notch = dic, 
                     dicrotic_peak = dia))
   
 }
-
 
 #-----------------------------------------------------------------------------------------------
 # harmonic distortion
